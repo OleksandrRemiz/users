@@ -84,23 +84,23 @@ $("#btn-save-modal").click(function (){
   lastname = $("#last-name").val();
   id = $("#to-edit-hidden").val();
   role_id = $("#role").val();
-  status = Number($('#checkbox-status').is(':checked'));
+  user_status = Number($('#checkbox-status').is(':checked'));
 
   if($("#action-hidden").val() == "edit"){
     $.ajax({
       type: "POST",
       url: "../../app/update_user.php",
-      data: {firstname:firstname, lastname:lastname, id:id, role_id:role_id, status:status}
+      data: {firstname:firstname, lastname:lastname, id:id, role_id:role_id, status:user_status}
     }).done(function(response) {
       response = JSON.parse(response);
       if(response["status"]){
         $("[data-row-id=" + id + "] .firstname").text(firstname);
         $("[data-row-id=" + id + "] .lastname").text(lastname);
         $("[data-row-id=" + id + "] .role-span").text(response["role"]);
-        if(status){
+        if(user_status){
           $("[data-row-id=" + id + "] .fa-circle").removeClass("not-active-circle");
           $("[data-row-id=" + id + "] .fa-circle").addClass("active-circle");
-        }else if(!status){
+        }else if(!user_status){
           $("[data-row-id=" + id + "] .fa-circle").removeClass("active-circle");
           $("[data-row-id=" + id + "] .fa-circle").addClass("not-active-circle");
         }
