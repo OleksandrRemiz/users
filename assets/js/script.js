@@ -147,7 +147,6 @@ $("#users-table").on("click", ".delete-button", function (){
       }
     });
   });
-  
 });
 
 // Main checkbox
@@ -168,47 +167,62 @@ $("#users-table").on("click", ".user-checkbox", function (){
   }else{
     $("#all-items").prop("checked", false);
   }
-})
+});
+
+// Set users active/inactive/delete
+function usersMultiaction(arrayOfUsers, action){
+  $.ajax({
+    type: "POST",
+    url: "../../app/multiaction.php",
+    data: {action:action, users:arrayOfUsers}
+  }).done(function(response) {
+    response = JSON.parse(response);
+    if(response["status"]){
+      arrayOfUsers.forEach(function(item) {
+        if(action == "activate"){
+          $("[data-row-id=" + item + "] .fa-circle").removeClass("not-active-circle");
+          $("[data-row-id=" + item + "] .fa-circle").addClass("active-circle");
+        }else if(action == "inactivate"){
+          $("[data-row-id=" + item + "] .fa-circle").removeClass("active-circle");
+          $("[data-row-id=" + item + "] .fa-circle").addClass("not-active-circle");
+        }else if(action == "delete"){
+          $("[data-row-id=" + item + "]").remove();
+        }
+      });
+    }else{
+      showModalWindow("Warning!", response["error"]["message"]);
+    }
+  }); 
+}
+
+// Creates array of ids of checked users
+function checkedUsersArray(){
+  let users = [];
+  $(".user-checkbox").each(function(){
+    if($(this).is(':checked')){
+      users.push($(this).closest("tr").attr("data-row-id"));
+    }
+  });
+  return users;
+}
 
 // Users options
 $(".users-options-submit").click(function(){
   let action = $(this).siblings("select").val();
   if(action){
-    let users = [];
-    $(".user-checkbox").each(function(){
-      if($(this).is(':checked')){
-        users.push($(this).closest("tr").attr("data-row-id"));
-      }
-    });
-    confirmWindow("Sure?", "Make these changes?");
-    $('#yes-button').click(function(){
-      if(users.length){
-        $.ajax({
-          type: "POST",
-          url: "../../app/multiaction.php",
-          data: {action:action, users:users}
-        }).done(function(response) {
-          response = JSON.parse(response);
-          if(response["status"]){
-            users.forEach(function(item, i, users) {
-              if(action == "activate"){
-                $("[data-row-id=" + item + "] .fa-circle").removeClass("not-active-circle");
-                $("[data-row-id=" + item + "] .fa-circle").addClass("active-circle");
-              }else if(action == "inactivate"){
-                $("[data-row-id=" + item + "] .fa-circle").removeClass("active-circle");
-                $("[data-row-id=" + item + "] .fa-circle").addClass("not-active-circle");
-              }else if(action == "delete"){
-                $("[data-row-id=" + item + "]").remove();
-              }
-            });
-          }else{
-            showModalWindow("Warning!", response["error"]["message"]);
-          }
+    let users = checkedUsersArray();
+    if(users.length){
+      if(action == "delete"){
+        confirmWindow("Sure?", "Make these changes?");
+        $('#yes-button').click(function(){
+          usersMultiaction(users, action);
         });
       }else{
-        showModalWindow("Warning!", "Please, choose some items.");
+        usersMultiaction(users, action);
       }
-    });
+    }else{
+      showModalWindow("Warning!", "Please, choose some items.");
+    }
   }else{
     showModalWindow("Warning!", "Please, choose an action to do with selected users.");
   }
